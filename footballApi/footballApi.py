@@ -68,11 +68,17 @@ class FootballAPI(commands.Cog):
 
         fixtures = data.get("response")
 
-        out_str = ""
-        await ctx.send(f"**{DotMap(fixtures[0]).league.name}**")
+        max_length = 0
+        for x in fixtures:
+            if n := (len(DotMap(x).teams.away.name) + len(DotMap(x).teams.home.name) + 6) > max_length:
+                max_length = n
+
+        out_str = "```"
+        out_str += f"Game{' '*(max_length-len('Game'))}|Time (CST){' '*(max_length-len('Time (CST)'))}"
+
         for x in fixtures:
             x = DotMap(x)
-            await ctx.send(f'''
-            __{x.teams.home.name}__ vs __{x.teams.away.name}__
-*{datetime.datetime.fromisoformat(x.fixture.date).strftime("%Y-%m-%d %I:%M %p")}*
-''')
+            out_str += f"{x.teams.home.name} vs {x.teams.away.name}{' '*(max_length-(len(x.teams.home.name)+4+len(x.teams.away.name)))}"
+            out_str += f'|{datetime.datetime.fromisoformat(x.fixture.date).strftime("%A %b %d at %I:%M %p")} CST*\n'
+        out_str += "```"
+        await ctx.send(out_str)
